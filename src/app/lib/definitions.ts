@@ -5,6 +5,7 @@ export type Element = {
     difficulty?: number;
     categoryCode?: string;
     copID?: number;
+
 }
 
 export type Category = {
@@ -15,25 +16,44 @@ export type Category = {
     copID?: number;
 }
 
-export class ElementList {
-    readonly _category: Category;
-    readonly _elements: Element[];
-
-    constructor(category: Category, elements: Element[]) {
-        this._elements = elements;
-        this._category = category;
-    }
-}
-
 export type ElementRequirement = {
     categoryCode?: string;
     amount?: number;
     copID?: number;
 }
 
-export class Tree<T> {
-    readonly _root: Node<T> = new Node<T>();
+export class ItemSelect<T> {
+    readonly _item: T;
+    selected: boolean = false;
+    constructor(item: T) {
+        this._item = item;
+    }
+}
 
+export class ElementList {
+    _disabled: boolean = false;
+    readonly _category: Category;
+    readonly _elements: ItemSelect<Element>[];
+
+    constructor(category: Category, elements: ItemSelect<Element>[]) {
+        this._elements = elements;
+        this._category = category;
+    }
+
+    set disabled(disabled: boolean) {
+        this._disabled = disabled;
+    }
+}
+
+export class Tree<T> {
+    readonly _root: Node<T>;
+
+    constructor(root?: Node<T>) {
+        root ?
+            this._root = root
+            :
+            this._root = new Node<T>();
+    }
 
 }
 
@@ -49,7 +69,6 @@ export class Node<T> {
         this._children.push(child);
         return child;
     }
-
 
     get data(): T | undefined {
         return this._data;

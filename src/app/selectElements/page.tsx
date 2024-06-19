@@ -8,8 +8,6 @@ export default function Page() {
 
     const cop = "Liga 2024"
 
-
-
     return (
         <div>
             <AddElementsToPlan cop={cop}></AddElementsToPlan>

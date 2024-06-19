@@ -1,67 +1,68 @@
 'use client'
-import {Category, Element, ElementList, Tree, Node} from "@/app/lib/definitions";
+import {Category, Element, ElementList, Tree, Node, ItemSelect} from "@/app/lib/definitions";
 import "bootstrap/dist/css/bootstrap.min.css"
 import React, {ReactNode, useState} from "react";
 import {Accordion, AccordionHeader, AccordionItem, Button, ListGroupItem} from "react-bootstrap";
 import {ListGroup} from "react-bootstrap";
+import {CategoryView, ElementView} from "@/app/ui/elements/simple-views";
 
 
-export default function ElementTreeView({tree, onClick}: {tree: Tree<ElementList>, onClick?: (element: Element) => void,}): JSX.Element {
+export default function ElementTreeView({tree, onClick}: {tree: Tree<ElementList>, onClick?: (elementSelect: ItemSelect<Element>, id: string) => void,}): JSX.Element {
+
+    function getDisabled(code: string): boolean {
+        for (let child of tree._root.children) {
+            if (code.startsWith(child.data!._category.code))
+                return child.data!._disabled;
+        }
+        return false;
+    }
 
     return (
-        <TreeView nodes={tree._root.children} func={onClick} ></TreeView>
+        <TreeView node={tree._root.children} func={onClick} getDisabled={getDisabled} ></TreeView>
     );
+
+
 }
 
-function TreeView({nodes, func}: {nodes: Node<ElementList>[], func?: (element: Element) => void}): React.JSX.Element {
+function TreeView({node, func, getDisabled}: {node: Node<ElementList>[], func?: (elementSelect: ItemSelect<Element>, id: string) => void, getDisabled: (code: string) => boolean}): React.JSX.Element {
+
     return (
         <Accordion flush>
-                {nodes.map(child => {
-                    return (
-                        <Accordion.Item key={'acc'+child.data?._category?.code} eventKey={child.data?._category?.code ? child.data?._category?.code : ""} >
+            {node.map(child => {
+                return (
+                    <Accordion.Item  key={'acc'+child.data?._category?.code} eventKey={child.data?._category?.code ? child.data?._category?.code : ""} >
+                        <div className={"bg-primary"}>
                             <Accordion.Header>
-                                    <div style={{height: "100%", width: "100%", display: "flex"}}>
-                                        <b style={{width: "40px", textAlign: "center"}}> {child.data?._category?.code} </b>
-                                        <div className="vr" style={{marginRight: "20px", marginLeft: "10px"}}></div>
-                                        <label > {child.data?._category?.name} </label>
-                                    </div>
+                                <CategoryView category={child.data?._category}></CategoryView>
                             </Accordion.Header>
-                                <Accordion.Body style={{paddingTop: "2px", paddingBottom: "2px"}}>
-                                    <ListGroup variant={"flush"}>
-                                        {child.data?._elements.map((element: Element) => {
-                                            return (
-                                                <ListGroupItem key={'acc'+element.code}>
-                                                    <div style={{height: "100%", width: "100%", display: "flex"}}>
-                                                        <b style={{width: "60px", textAlign: "center"}}> {element.code} </b>
-                                                        <div className="vr" style={{marginRight: "20px", marginLeft: "10px"}}></div>
-                                                        <label > {element.name} </label>
-                                                        <div style={{marginLeft: "auto", height: "100%"}}>
-                                                            <label style={{marginLeft: "auto", marginRight: "20px"}}> {element.difficulty} </label>
-                                                            {/* Button with passed function */}
-                                                            {
-                                                                func ?
-                                                                <Button onClick={() => func(element)}>
-                                                                Add
-                                                                </Button>
-                                                                : <></>
-                                                            }
-
-
-                                                        </div>
-                                                    </div>
-                                                </ListGroupItem>
-                                            )
-                                        })}
-                                    </ListGroup>
-                                    <TreeView nodes={child.children} func={func}></TreeView>
-                                </Accordion.Body>
-                        </Accordion.Item>
-                    )
-                })}
+                        </div>
+                        <Accordion.Body style={{paddingTop: "0", paddingBottom: "0"}}>
+                            <ListGroup variant={"flush"}>
+                                {child.data?._elements.map((elementSelect: ItemSelect<Element>) => {
+                                    return (
+                                        <ListGroupItem key={'acc'+elementSelect._item.code} disabled={elementSelect.selected || getDisabled(elementSelect._item.categoryCode!)}>
+                                            <ElementView elementSelect={elementSelect}
+                                                         comp={
+                                                             <Button style={{width: "55px", textAlign: "center"}} disabled={elementSelect.selected || getDisabled(elementSelect._item.categoryCode!)} variant={"outline-success"}
+                                                                     onClick={() => func? func(elementSelect, child.data!._category!.code.toString()) : {}}>
+                                                                 {elementSelect.selected ? "✓" : "Add"}
+                                                             </Button>}>
+                                            </ElementView>
+                                        </ListGroupItem>
+                                    )
+                                })}
+                            </ListGroup>
+                            <TreeView node={child.children} func={func} getDisabled={getDisabled}></TreeView>
+                        </Accordion.Body>
+                    </Accordion.Item>
+                )
+            })}
 
         </Accordion>
     )
 }
+
+
 
 
 
