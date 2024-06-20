@@ -22,7 +22,7 @@ export type ElementRequirement = {
     copID?: number;
 }
 
-export class ItemSelect<T> {
+export class Selectable<T> {
     readonly _item: T;
     selected: boolean = false;
     constructor(item: T) {
@@ -33,9 +33,10 @@ export class ItemSelect<T> {
 export class ElementList {
     _disabled: boolean = false;
     readonly _category: Category;
-    readonly _elements: ItemSelect<Element>[];
+    readonly _elements: Selectable<Element>[];
+    _amountSelected: number = 0;
 
-    constructor(category: Category, elements: ItemSelect<Element>[]) {
+    constructor(category: Category, elements: Selectable<Element>[]) {
         this._elements = elements;
         this._category = category;
     }

@@ -2,7 +2,7 @@ import {Axios, AxiosResponse} from "axios";
 
 
 import axios from "axios";
-import {Category, ElementList, ElementRequirement, Tree} from "@/app/lib/definitions";
+import {Category, ElementList, ElementRequirement, Node, Selectable, Tree} from "@/app/lib/definitions";
 import {Element} from "@/app/lib/definitions";
 
 const API_URL: string = 'http://localhost:8080/api/';
@@ -29,5 +29,35 @@ export async function getParentCategories(cop: string): Promise<Category[]> {
 export async function getRequirements(cop: string): Promise<ElementRequirement[]> {
     const response = await axios.get<ElementRequirement[]>(API_URL + `${cop}/requirements`);
     return response.data;
+}
+
+export async function makeTree(cop: string): Promise<Tree<ElementList>> {
+    let parents = await getParentCategories(cop);
+    let tree: Tree<ElementList> = new Tree();
+
+    await treeHelper(cop, parents, tree._root)
+
+    return tree;
+}
+
+async function treeHelper(cop: string, cats: Category[], currentNode: Node<ElementList>): Promise<Node<ElementList>> {
+    if (cats.length == 0) {
+        return currentNode;
+    }
+
+    let node: Node<ElementList> = new Node();
+
+    for (let parent of cats) {
+        let elements = await getElementsByCategory(cop, parent.code);
+        let elementSelects: Selectable<Element>[] = [];
+        for (let elem of elements) {
+            elementSelects.push(new Selectable<Element>(elem));
+        }
+        node = currentNode?.addChild(new ElementList(parent, elementSelects));
+        let children = await getCategoryChildren(cop, parent.code);
+        await treeHelper(cop, children, node)
+    }
+
+    return node;
 }
 
